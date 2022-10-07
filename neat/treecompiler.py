@@ -7,6 +7,7 @@ def compiletree(token_list: list):
 	global_dict = {}
 	tree_stack = [global_dict]
 	val_stack = [[]]
+	il_key_stack = []
 	sec_stack = ["GLOBAL"]
 	nested_sec = []
 	key = ""
@@ -14,7 +15,7 @@ def compiletree(token_list: list):
 	last_node = ""
 	curr_wrapper = PTOK.NONE
 	appended_sec = False
-	in_list = False
+	in_list = 0
 	for token in token_list:
 		if type(token) == ConfigSectionTitle:
 			if appended_sec == False:
@@ -87,17 +88,43 @@ def compiletree(token_list: list):
 				last_number_stack[len(last_number_stack)-1] += 1
 				key = last_number_stack[len(last_number_stack)-1]
 			elif token == PTOK.S_LIST: #start list
-				in_list = True
+				in_list += 1
 				val_stack.append([])
 			elif token == PTOK.E_LIST: #end list
-				in_list = False
-				val_stack[len(val_stack)-2].append(val_stack[len(val_stack)-1])
-				val_stack.pop()
+				in_list -= 1
+				if type(val_stack[len(val_stack)-2]) == dict:
+					#print(il_key_stack)
+					if len(il_key_stack) > 0:
+						val_stack[len(val_stack)-2][il_key_stack[len(il_key_stack)-1]] = val_stack[len(val_stack)-1]
+						val_stack.pop()
+						il_key_stack.pop()
+				elif type(val_stack[len(val_stack)-2]) == list:
+					val_stack[len(val_stack)-2].append(val_stack[len(val_stack)-1])
+					val_stack.pop()
+			elif token == PTOK.IL_S_DICT:
+				val_stack.append({})
+			elif token == PTOK.IL_E_DICT:
+				#print(il_key_stack)
+				if type(val_stack[len(val_stack)-2]) == dict:
+					if len(il_key_stack) > 0:
+						val_stack[len(val_stack)-2][il_key_stack[len(il_key_stack)-1]] = val_stack[len(val_stack)-1]
+						val_stack.pop()
+						il_key_stack.pop()
+				elif type(val_stack[len(val_stack)-2]) == list:
+					val_stack[len(val_stack)-2].append(val_stack[len(val_stack)-1])
+					val_stack.pop()
+			elif token == PTOK.IL_DICT:
+				if in_list:
+					il_key_stack.append(last_node)
 		elif type(token) == str:
 			if key == "":
 				key = token
 			else:
-				val_stack[len(val_stack)-1].append(token)
+				if type(val_stack[len(val_stack)-1]) == list:
+					val_stack[len(val_stack)-1].append(token)
+				elif type(last_node) == str:
+					print(TokenErr("dict_literal", sec_stack[len(sec_stack)-1], last_node))
+					return False
 		elif type(token) in [float, int]:
 			if key == "":
 				key = token
@@ -109,7 +136,11 @@ def compiletree(token_list: list):
 						print(TokenErr("index_conflict", sec_stack[len(sec_stack)-1], token))
 						return False
 			else:
-				val_stack[len(val_stack)-1].append(token)
+				if type(val_stack[len(val_stack)-1]) == list:
+					val_stack[len(val_stack)-1].append(token)
+				elif type(last_node) == str:
+					print(TokenErr("dict_literal", sec_stack[len(sec_stack)-1], last_node))
+					return False
 		last_node = token
 	#print(global_dict)
 	return global_dict

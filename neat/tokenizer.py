@@ -33,7 +33,13 @@ def load(content: str):
 						string_buffer = ""
 						wrapping = WRAP.Q_SING
 					elif curr_char == "[":
-						wrapping = WRAP.SECT
+						if in_list != 0:
+							token_list.append(PTOK.IL_S_DICT)
+						else:
+							wrapping = WRAP.SECT
+					elif curr_char == "]" and not last_char.isdigit() and wrapping != WRAP.SECT:
+						if in_list != 0:
+							token_list.append(PTOK.IL_E_DICT)
 					elif curr_char == "(":
 						in_list += 1
 						token_list.append(PTOK.S_LIST)
@@ -42,7 +48,7 @@ def load(content: str):
 						token_list.append(PTOK.E_LIST)
 					elif curr_char == "-" and col_num == 0 and in_list == 0:
 						token_list.append(PTOK.AUTO_IND)
-					elif (curr_char.isspace() or curr_char in (":",",",")")) and string_buffer not in ("","-"):
+					elif (curr_char.isspace() or curr_char in (":",",",")","]")) and string_buffer not in ("","-"):
 						try:
 							if "." in string_buffer:
 								num = float(string_buffer)
@@ -60,7 +66,13 @@ def load(content: str):
 						if curr_char == ")":
 							token_list.append(PTOK.E_LIST)
 							in_list -= 1
+						elif curr_char == ":":
+							token_list.append(PTOK.IL_DICT)
+						elif curr_char == ":":
+							token_list.append(PTOK.IL_DICT)
 						string_buffer = ""
+					elif curr_char == ":":
+						token_list.append(PTOK.IL_DICT)
 					elif curr_char == "-" or curr_char == "." or curr_char.isdigit():
 						string_buffer += curr_char
 				elif curr_char == '"' and wrapping == WRAP.Q_DOUB:

@@ -8,6 +8,9 @@ class PTOK(Enum):
     END_L = 3
     S_LIST = 4
     E_LIST = 5
+    IL_DICT = 6
+    IL_S_DICT = 7
+    IL_E_DICT = 8
 
 
 class ConfigSectionTitle:
