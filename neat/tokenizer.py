@@ -76,7 +76,7 @@ def load(content: str):
 					string_buffer = ""
 					wrapping = WRAP.NONE
 				last_char = curr_char
-		if line != "" and wrapping == WRAP.NONE and not line.endswith("] ") and in_list == 0:
+		if line != "" and wrapping == WRAP.NONE and not line.endswith("[-] ") and in_list == 0:
 			if line.endswith(": "):
 				in_list += 1
 				token_list.append(PTOK.S_LIST)
