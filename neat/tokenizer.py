@@ -19,7 +19,7 @@ def load_module(module_list, raw_line:str, current_dir:str, l_n) -> dict:
 	path = path.with_suffix(".neat")
 
 	if not path.exists():
-		print(TokenErr("module_path_nonexistant", l_n, 0, path.joinpath(p_part)))
+		print(TokenErr("module_path_nonexistant", l_n, 0, path.joinpath(p_part), filepath=path))
 		return
 	return load(str(path), module_list)
 	
@@ -32,6 +32,7 @@ def load(filepath: str, module_list = []):
 	wrapping = WRAP.NONE
 	last_char = ""
 	in_list = 0
+	literal_buffer = ""
 	for (line_num, raw_line) in enumerate(content.splitlines()):
 		line = raw_line.rstrip().lstrip() + " "
 		if line == "[-] ": # END_SEC dont create an END_L
@@ -43,13 +44,36 @@ def load(filepath: str, module_list = []):
 			in_list = 0
 		else:
 			for col_num, curr_char in enumerate(line):
-				if wrapping == WRAP.Q_SING and curr_char != "'":
-					string_buffer += curr_char
-				elif wrapping == WRAP.Q_DOUB and curr_char != '"':
-					string_buffer += curr_char
-				elif wrapping == WRAP.SECT and curr_char != "]":
-					string_buffer += curr_char
-				if wrapping == WRAP.NONE:
+				if not curr_char.isalpha() and\
+				literal_buffer != "" and\
+				not literal_buffer.isspace()\
+				and wrapping == WRAP.NONE:
+					#print(wrapping)
+					#print(f'{filepath}[{line_num + 1},{col_num}](' + literal_buffer + ')')
+					low_lit_buf = literal_buffer.lower()
+					if low_lit_buf in ("true", "t", "yes", "y", "affirmative", "positive"):
+						token_list.append(True)
+					elif low_lit_buf in ("!", "f", "x", "no", "false", "/", "n", "negative"):
+						token_list.append(False)
+					elif low_lit_buf in ("?", "n/a", "null", "none", "idk", "noone"):
+						token_list.append(None)
+					else:
+						print(TokenErr("invalid_literal", line_num, col_num, literal_buffer, filepath=filepath))
+						return False
+					literal_buffer = ""
+				if curr_char == '"' and wrapping == WRAP.Q_DOUB:
+					token_list.append(string_buffer)
+					string_buffer = ""
+					wrapping = WRAP.NONE
+				elif curr_char == "'" and wrapping == WRAP.Q_SING:
+					token_list.append(string_buffer)
+					string_buffer = ""
+					wrapping = WRAP.NONE
+				elif curr_char == ']' and wrapping == WRAP.SECT:
+					token_list.append(ConfigSectionTitle(string_buffer))
+					string_buffer = ""
+					wrapping = WRAP.NONE
+				elif wrapping == WRAP.NONE:
 					if curr_char == '"':
 						string_buffer = ""
 						wrapping = WRAP.Q_DOUB
@@ -85,7 +109,7 @@ def load(filepath: str, module_list = []):
 								num = int(string_buffer)
 								token_list.append(num)
 							except:
-								print(TokenErr("invalid_num", line_num + 1, col_num))
+								print(TokenErr("invalid_num", line_num + 1, col_num, filepath=filepath))
 								return False
 						if curr_char == ")":
 							token_list.append(PTOK.E_LIST)
@@ -99,27 +123,28 @@ def load(filepath: str, module_list = []):
 						token_list.append(PTOK.IL_DICT)
 					elif curr_char == "-" or curr_char == "." or curr_char.isdigit():
 						string_buffer += curr_char
-				elif curr_char == '"' and wrapping == WRAP.Q_DOUB:
-					token_list.append(string_buffer)
-					string_buffer = ""
-					wrapping = WRAP.NONE
-				elif curr_char == "'" and wrapping == WRAP.Q_SING:
-					token_list.append(string_buffer)
-					string_buffer = ""
-					wrapping = WRAP.NONE
-				elif curr_char == ']' and wrapping == WRAP.SECT:
-					token_list.append(ConfigSectionTitle(string_buffer))
-					string_buffer = ""
-					wrapping = WRAP.NONE
+					elif curr_char.isalpha() or curr_char in ('?', '!', '/'):
+						literal_buffer += curr_char
+				elif wrapping == WRAP.Q_SING and curr_char != "'":
+					string_buffer += curr_char
+				elif wrapping == WRAP.Q_DOUB and curr_char != '"':
+					string_buffer += curr_char
+				elif wrapping == WRAP.SECT and curr_char != "]":
+					string_buffer += curr_char
 				last_char = curr_char
-		if line != "" and wrapping == WRAP.NONE and not line.endswith("[-] ") and in_list == 0:
+		if line != "" and wrapping == WRAP.NONE and not line == "[-] " and in_list == 0:
 			if line.endswith(": "):
 				in_list += 1
 				token_list.append(PTOK.S_LIST)
 			else:
 				token_list.append(PTOK.END_L)
 	#print(token_list)
+	#print(literal_buffer)
 	module_dict = {}
 	for di in module_list:
-		module_dict.update(di)
+		if di:
+			module_dict.update(di)
+		else:
+			print(f"^NEAT^ (CALLING : '{Path(filepath).absolute()}') Failed to compile a module reference within the CALLING file.  Check above for more info.\n")
+			return False
 	return compiletree(token_list, module_dict)

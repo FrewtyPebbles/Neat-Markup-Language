@@ -3,3 +3,4 @@ __pycache__/
 !example.neat
 !module.neat
 .gitignore
+.vscode

@@ -3,7 +3,7 @@ from .datastructures.token.error import TokenErr
 from .datastructures.token.complex import PTOK, ConfigSectionTitle
 
 
-def compiletree(token_list: list, module_dict:dict):
+def compiletree(token_list: list, module_dict:dict, filepath = "?"):
 	#print(module_dict)
 	global_dict = module_dict
 	tree_stack = [global_dict]
@@ -33,7 +33,7 @@ def compiletree(token_list: list, module_dict:dict):
 							last_number_stack[len(last_number_stack)-1] = num
 						sec_stack.append(num)
 					else:
-						print(TokenErr("index_conflict", sec_stack[len(sec_stack)-1], token.title))
+						print(TokenErr("index_conflict", sec_stack[len(sec_stack)-1], token.title, filepath=filepath))
 						return False
 			except:
 				try:
@@ -112,29 +112,37 @@ def compiletree(token_list: list, module_dict:dict):
 			elif token == PTOK.IL_DICT:
 				if in_list:
 					il_key_stack.append(last_node)
-		elif type(token) == str:
+		elif type(token) in (str, bool) or token is None:
 			if key == "":
 				key = token
 			else:
 				if type(val_stack[len(val_stack)-1]) == list:
 					val_stack[len(val_stack)-1].append(token)
-				elif type(last_node) == str:
-					print(TokenErr("dict_literal", sec_stack[len(sec_stack)-1], last_node))
+				elif type(val_stack[len(val_stack)-1]) == dict and last_node == PTOK.IL_DICT:
+					if len(il_key_stack) > 0:
+						val_stack[len(val_stack)-1][il_key_stack[len(il_key_stack)-1]] = token
+						il_key_stack.pop()
+				elif type(last_node) in (str, bool) or token is None:
+					print(TokenErr("dict_literal", sec_stack[len(sec_stack)-1], token, filepath=filepath))
 					return False
-		elif type(token) in [float, int]:
+		elif type(token) in (float, int):
 			if key == "":
 				key = token
 				if type(token) == int:
 					if token not in val_stack[len(val_stack)-1] and token > last_number_stack[len(last_number_stack)-1]:
 							last_number_stack[len(last_number_stack)-1] = token
 					else:
-						print(TokenErr("index_conflict", sec_stack[len(sec_stack)-1], token))
+						print(TokenErr("index_conflict", sec_stack[len(sec_stack)-1], token, filepath=filepath))
 						return False
 			else:
 				if type(val_stack[len(val_stack)-1]) == list:
 					val_stack[len(val_stack)-1].append(token)
-				elif type(last_node) == str:
-					print(TokenErr("dict_literal", sec_stack[len(sec_stack)-1], last_node))
+				elif type(val_stack[len(val_stack)-1]) == dict and last_node == PTOK.IL_DICT:
+					if len(il_key_stack) > 0:
+						val_stack[len(val_stack)-1][il_key_stack[len(il_key_stack)-1]] = token
+						il_key_stack.pop()
+				elif type(token) in (float, int):
+					print(TokenErr("dict_literal", sec_stack[len(sec_stack)-1], token, filepath=filepath))
 					return False
 		last_node = token
 	#print(global_dict)
