@@ -1,4 +1,9 @@
-[Italian Food]
+*.moduletest.module
+"objects:
+	[Food]
+"
+
+[food] [Italian Food]
 	"about":"Food from Italy"
 	[pizza]
 		"My Pizza Order"
@@ -16,21 +21,23 @@
 		- (["autolistdict":('a', 'b', 'c', 1), "abc"], 1, 2, "three", 4)
 		- "pepperoni", "anchovies", "peppers", "mozzerella", "pineapple"
 		- "The -'s will auto increment adding 1 to the last highest integer defined."
+		- "abc"
 	[-]
 	[pizza] [location]
 		"Delivery location detals."
 		- "cool guy street"
+		1 "abc"
 	[-]
 [-]
-[Italian Food] [pizza] [price]
+[food] [Italian Food] [pizza] [price]
 	"Tip":"$7"
 	"ammount":"$10"
 [-]
-[Italian Food] [Restraunt]
+[food] [Italian Food] [Restraunt]
 	- "The best pizza place"
 [-]
 
 "
 RESULT:
-{'Italian Food': {'about': 'Food from Italy', 'pizza': {'Pizza toppings.': ['spinach', ['garlic powder', 'red pepper'], 'Onion', 'artichoke', {'inline test': {'namedlist': ['test', {'innerdict': {'listname': ['list']}}, 'after'], 'nameddict': {'named': ['list']}}}, 'after inline', 'banana pepper'], 0: [{'autolistdict': ['a', 'b', 'c', 1]}, 1, 2, 'three', 4], 1: 'pepperoni', 2: 'anchovies', 3: 'peppers', 4: 'mozzerella', 5: 'pineapple', 6: "The -'s will auto increment adding 1 to the last highest integer defined.", 'location': {0: 'cool guy street'}, 'price': {'Tip': '$7', 'ammount': '$10'}}, 'Restraunt': {0: 'The best pizza place'}}}
+{'food': {'usage': 'Eat when hungry.', 'Italian Food': {'about': 'Food from Italy', 'pizza': {'Pizza toppings.': ['spinach', ['garlic powder', 'red pepper'], 'Onion', 'artichoke', {'inline test': {'namedlist': ['test', {'innerdict': {'listname': ['list']}}, 'after'], 'nameddict': {'named': ['list']}}}, 'after inline', 'banana pepper'], 0: [{'autolistdict': ['a', 'b', 'c', 1]}, 1, 2, 'three', 4], 1: 'pepperoni', 2: 'anchovies', 3: 'peppers', 4: 'mozzerella', 5: 'pineapple', 6: "The -'s will auto increment adding 1 to the last highest integer defined.", 7: 'abc', 'location': {0: 'cool guy street', 1: 'abc'}, 'price': {'Tip': '$7', 'ammount': '$10'}}, 'Restraunt': {0: 'The best pizza place'}}}}
 "

@@ -3,8 +3,9 @@ from .datastructures.token.error import TokenErr
 from .datastructures.token.complex import PTOK, ConfigSectionTitle
 
 
-def compiletree(token_list: list):
-	global_dict = {}
+def compiletree(token_list: list, module_dict:dict):
+	#print(module_dict)
+	global_dict = module_dict
 	tree_stack = [global_dict]
 	val_stack = [[]]
 	il_key_stack = []
@@ -53,16 +54,11 @@ def compiletree(token_list: list):
 						continue
 					curr_sec = curr_sec[sec]
 				
-				#print(nested_sec[len(nested_sec)-1][len(nested_sec[len(nested_sec)-1])-1])
 				try:
 					curr_sec[nested_sec[len(nested_sec)-1][len(nested_sec[len(nested_sec)-1])-1]] = tree_stack[len(tree_stack)-1]
 				except:
 					tree_stack[len(tree_stack)-2][sec_stack[len(sec_stack)-1]
 											  ] = tree_stack[len(tree_stack)-1]
-				#print(curr_sec)
-				#else:
-				#	tree_stack[len(tree_stack)-2][sec_stack[len(sec_stack)-1]
-				#							  ] = tree_stack[len(tree_stack)-1]
 				tree_stack.pop()
 				sec_stack.pop()
 				nested_sec.pop()
@@ -73,7 +69,7 @@ def compiletree(token_list: list):
 				elif len(val_stack[0]) > 1:
 					if in_list:
 						tree_stack[len(tree_stack)-1][key] = val_stack[0]
-					else:
+					else:# inline autoincrement
 						for i, val in enumerate(val_stack[0]):
 							if i > 0:
 								last_number_stack[len(last_number_stack)-1] += 1
@@ -129,8 +125,7 @@ def compiletree(token_list: list):
 			if key == "":
 				key = token
 				if type(token) == int:
-					if token not in val_stack[len(val_stack)-1]:
-						if token > last_number_stack[len(last_number_stack)-1]:
+					if token not in val_stack[len(val_stack)-1] and token > last_number_stack[len(last_number_stack)-1]:
 							last_number_stack[len(last_number_stack)-1] = token
 					else:
 						print(TokenErr("index_conflict", sec_stack[len(sec_stack)-1], token))

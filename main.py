@@ -1,3 +1,3 @@
 import neat
 
-print(neat.load(open(input("file path:"), "r").read()))
+print(neat.load("example.neat"))

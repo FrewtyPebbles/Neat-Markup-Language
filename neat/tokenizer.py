@@ -1,10 +1,32 @@
+from pathlib import Path
 from .datastructures.token.error import TokenErr
 from .datastructures.token.character import WRAP
 from .datastructures.token.complex import PTOK, ConfigSectionTitle
 from .treecompiler import compiletree
 
-def load(content: str):
+def load_module(module_list, raw_line:str, current_dir:str, l_n) -> dict:
+	dot_p = raw_line[1:].lstrip().rstrip()
+	path = Path(current_dir).absolute()
+	for dot in dot_p:
+		if dot == ".":
+			path = path.parent
+		else:
+			break
+	mid_dot_p = dot_p.lstrip(".")
+	for p_part in mid_dot_p.split("."):
+		path = path.joinpath(p_part)
+	
+	path = path.with_suffix(".neat")
+
+	if not path.exists():
+		print(TokenErr("module_path_nonexistant", l_n, 0, path.joinpath(p_part)))
+		return
+	return load(str(path), module_list)
+	
+
+def load(filepath: str, module_list = []):
 	#the file is tokenized into a token list
+	content = open(filepath, "r").read()
 	token_list = []
 	string_buffer = ""
 	wrapping = WRAP.NONE
@@ -14,6 +36,8 @@ def load(content: str):
 		line = raw_line.rstrip().lstrip() + " "
 		if line == "[-] ": # END_SEC dont create an END_L
 			token_list.append(PTOK.END_SEC)
+		elif line.startswith("*"): # END_SEC dont create an END_L
+			module_list.append(load_module(module_list, line, filepath, line_num))
 		elif line == "~ ": # END_SEC dont create an END_L
 			token_list.append(PTOK.E_LIST)
 			in_list = 0
@@ -95,4 +119,7 @@ def load(content: str):
 			else:
 				token_list.append(PTOK.END_L)
 	#print(token_list)
-	return compiletree(token_list)
+	module_dict = {}
+	for di in module_list:
+		module_dict.update(di)
+	return compiletree(token_list, module_dict)
