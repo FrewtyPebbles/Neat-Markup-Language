@@ -1,2 +1,2 @@
 from .tokenizer import load
-VERSION = "0.5.2"
+VERSION = "0.5.3"

@@ -51,11 +51,11 @@ def load(filepath: str, module_list = []):
 					#print(wrapping)
 					#print(f'{filepath}[{line_num + 1},{col_num}](' + literal_buffer + ')')
 					low_lit_buf = literal_buffer.lower()
-					if low_lit_buf in ("true", "t", "yes", "y", "affirmative", "positive"):
+					if low_lit_buf in {"true", "t", "yes", "y", "affirmative", "positive"}:
 						token_list.append(True)
-					elif low_lit_buf in ("!", "f", "x", "no", "false", "/", "n", "negative"):
+					elif low_lit_buf in {"!", "f", "x", "no", "false", "/", "n", "negative"}:
 						token_list.append(False)
-					elif low_lit_buf in ("?", "n/a", "null", "none", "idk", "noone"):
+					elif low_lit_buf in {"?", "n/a", "null", "none", "idk", "noone"}:
 						token_list.append(None)
 					else:
 						print(TokenErr("invalid_literal", line_num, col_num, literal_buffer, filepath=filepath))
@@ -96,7 +96,7 @@ def load(filepath: str, module_list = []):
 						token_list.append(PTOK.E_LIST)
 					elif curr_char == "-" and col_num == 0 and in_list == 0:
 						token_list.append(PTOK.AUTO_IND)
-					elif (curr_char.isspace() or curr_char in (":",",",")","]")) and string_buffer not in ("","-"):
+					elif (curr_char.isspace() or curr_char in {":",",",")","]"}) and string_buffer not in {"","-"}:
 						try:
 							if "." in string_buffer:
 								num = float(string_buffer)
@@ -123,7 +123,7 @@ def load(filepath: str, module_list = []):
 						token_list.append(PTOK.IL_DICT)
 					elif curr_char == "-" or curr_char == "." or curr_char.isdigit():
 						string_buffer += curr_char
-					elif curr_char.isalpha() or curr_char in ('?', '!', '/'):
+					elif curr_char.isalpha() or curr_char in {'?', '!', '/'}:
 						literal_buffer += curr_char
 				elif wrapping == WRAP.Q_SING and curr_char != "'":
 					string_buffer += curr_char
