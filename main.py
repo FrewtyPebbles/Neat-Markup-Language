@@ -1,3 +1,3 @@
 import neat
-neat.load("example.neat")
-#print()
+
+print(neat.load("example.neat"))
